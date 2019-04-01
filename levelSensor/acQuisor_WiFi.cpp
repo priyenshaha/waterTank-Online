@@ -30,7 +30,7 @@ void acQuisorWiFi::Wconnect()
 
 void acQuisorWiFi::generateURL(String type, float distance, String customerName, String tankName, String Cdate, float btryLvl, int stat)
 {
-  String u = "https://";
+  String u = "http://";
   u += server;
   u += "/water/embeddedGateway/dataFromWaterTank.php";
   u += "?status=";

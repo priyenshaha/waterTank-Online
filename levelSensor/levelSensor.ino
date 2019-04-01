@@ -2,21 +2,20 @@
 #include <ESP8266WebServer.h>
 #include "acQuisor_WiFi.h"
 #include<ArduinoJson.h>
+#include<WiFiClient.h>
+#include<ESP8266HTTPClient.h>
+
 #include "FS.h"
 
 float tankHeight_cm = 100;
 float btryLvl=50.0;
 char* host = "priyenshaha.000webhostapp.com";
-const int httpPort = 80;
-
-//String Cmd[2], tmp;
 String serverResponse, Cdate;
 
 ESP8266WebServer server(80);   //Web server object. Will be listening in port 80 (default for HTTP)
 
 String customerName="",tankName="";
 String wifiSsid = "q1", wifiPass = "12345678", apSsid = "water_acQuisor", apPass = "acquisor123";
-//String customerName = "priyen@watertank", tankName = "Boys_hostel", customerWifiSsid = "q1", customerWifiPass = "12345678", APpass = "spatertech";
 
 acQuisorWiFi acqWifi(wifiSsid, wifiPass, apSsid, apPass, host);
 
@@ -56,8 +55,6 @@ void setup() {
   pinMode(echo, INPUT);
   pinMode(calibrationSwitch, INPUT);   //pull down calibration switch 
   pinMode(relayOutput, OUTPUT);  //Solenoid output
-  
-  //attachInterrupt(digitalPinToInterrupt(calibrationSwitch), calibrate, RISING);
   
   digitalWrite(relayOutput,0);
   
@@ -123,58 +120,46 @@ void loop()
     Serial.print("\nConnecting to host @ ");
     Serial.print(host);
     Serial.println();
+    
+    HTTPClient http;
+    
+    Serial.println(acqWifi.url);
 
-    WiFiClient client;
-    if (!client.connect(host, httpPort))
-    {
-      Serial.print("\nHost connection failed");
-      digitalWrite(D4,1); //No connection indicator #D4 is active low pin#
-    }
+    http.begin(acqWifi.url);
+
+    int httpCode = http.GET();
+    Serial.println(httpCode);
+    if(httpCode>=200&&httpCode<=399)
+      digitalWrite(D4,0); //Turn ON led as request completed successfully.
     else
+      digitalWrite(D4,1); //Turn off no connection indicator #D4 is active low pin#
+
+    delay(100);
+
+    serverResponse="x";
+  
+    serverResponse = http.getString();
+    ;
+      
+    Serial.print("Response from server: ");
+    Serial.println(serverResponse);
+      
+    int index = serverResponse.indexOf('_');
+    String cmd = serverResponse.substring(0,index);
+    Cdate = serverResponse.substring(index+1);
+    Serial.print("\nAction to be performed: ");
+    Serial.print(cmd);
+    Serial.print("\nToday is: ");
+    Serial.println(Cdate);
+    http.end();
+
+    if(cmd=="start")
     {
-      
-      digitalWrite(D4,0); //Turn off no connection indicator #D4 is active low pin#
-      
-      Serial.print("\nPresent water surface distance: ");
-      Serial.println(waterLevel);
-      Serial.println();
-      Serial.println(acqWifi.url);
-      client.print(String("GET ") + acqWifi.url + " HTTPS/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
-      delay(100);
-      unsigned long timeout = millis();
-      while (client.available() == 0) 
-      {
-        if (millis() - timeout > 10000) 
-        {
-          Serial.println(">>> Client Timeout: ");
-          client.stop();
-          return;
-        }
-      }
-     // cycleCount++;
-      serverResponse="x";
-      while (client.available()) {
-        //Serial.print("o");
-        serverResponse = client.readStringUntil('\r');
-      }
-      Serial.print("Response from server: ");
-       Serial.println(serverResponse);
-       
-       int index = serverResponse.indexOf('_');
-       String cmd = serverResponse.substring(1,index);
-       Cdate = serverResponse.substring(index+1);
-       Serial.print("\nAction to be performed: ");
-       Serial.print(cmd);
-       Serial.print("\nToday is: ");
-       Serial.println(Cdate);
+      digitalWrite(relayOutput, 1);
+      Serial.println("\nValve opened, Water is filling up!");
+    }
   
-      if(cmd.length()==6)
-      {
-        digitalWrite(relayOutput, 1);
-        Serial.println("\nValve opened, Water is filling up!");
-      }
-  
-      else if(cmd.length()==5)
+      else if(cmd=="stop")
       {
         digitalWrite(relayOutput, 0);
         Serial.println("\nValve closed. Water tank refilled");
@@ -184,7 +169,7 @@ void loop()
       {
         Serial.println("Motor / valve State unchanged");
       }
-    }
+    
    //----------------------------------------------------------//
     //Serial.print("\nNumber of successful cycles: ");
     //Serial.println(cycleCount);
