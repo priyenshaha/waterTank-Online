@@ -6,7 +6,7 @@
 
 float tankHeight_cm = 100;
 float btryLvl=50.0;
-char* host = "172.22.25.3";
+char* host = "http://priyenshaha.000webhostapp";
 const int httpPort = 80;
 
 //String Cmd[2], tmp;
