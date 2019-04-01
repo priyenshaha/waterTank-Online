@@ -1,11 +1,12 @@
 #include "acQuisor_WiFi.h"
 #include<ESP8266WiFi.h>
-acQuisorWiFi::acQuisorWiFi(String WiFiSsid, String WiFiPass, String AP_ssid, String AP_pass)
+acQuisorWiFi::acQuisorWiFi(String WiFiSsid, String WiFiPass, String AP_ssid, String AP_pass, String host)
 {
   customerWifiSsid = WiFiSsid;
   customerWifiPass = WiFiPass;
   device_SSID = AP_ssid;
   device_PASS = AP_pass;
+  server = host;
 }
 
 void acQuisorWiFi::Wconnect()
@@ -29,12 +30,14 @@ void acQuisorWiFi::Wconnect()
 
 void acQuisorWiFi::generateURL(String type, float distance, String customerName, String tankName, String Cdate, float btryLvl, int stat)
 {
-  String u = "http://172.22.25.3/water/embeddedGateway/dataFromWaterTank.php";
+  String u = "https://";
+  u += server;
+  u += "/water/embeddedGateway/dataFromWaterTank.php";
   u += "?status=";
   u += stat;
   u += "&customerName=";
   u += customerName;
-  u += "&tankName=";
+  u += "&deviceName=";
   u += tankName;
   u += "&cdate=";
   u += Cdate;

@@ -6,7 +6,7 @@
 
 float tankHeight_cm = 100;
 float btryLvl=50.0;
-char* host = "http://priyenshaha.000webhostapp.com";
+char* host = "priyenshaha.000webhostapp.com";
 const int httpPort = 80;
 
 //String Cmd[2], tmp;
@@ -18,7 +18,7 @@ String customerName="",tankName="";
 String wifiSsid = "q1", wifiPass = "12345678", apSsid = "water_acQuisor", apPass = "acquisor123";
 //String customerName = "priyen@watertank", tankName = "Boys_hostel", customerWifiSsid = "q1", customerWifiPass = "12345678", APpass = "spatertech";
 
-acQuisorWiFi acqWifi(wifiSsid, wifiPass, apSsid, apPass);
+acQuisorWiFi acqWifi(wifiSsid, wifiPass, apSsid, apPass, host);
 
 int relayOutput = D2;
 int calibrationSwitch = D3;
@@ -139,12 +139,12 @@ void loop()
       Serial.println(waterLevel);
       Serial.println();
       Serial.println(acqWifi.url);
-      client.print(String("GET ") + acqWifi.url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
-  
+      client.print(String("GET ") + acqWifi.url + " HTTPS/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
+      delay(100);
       unsigned long timeout = millis();
       while (client.available() == 0) 
       {
-        if (millis() - timeout > 5000) 
+        if (millis() - timeout > 10000) 
         {
           Serial.println(">>> Client Timeout: ");
           client.stop();
@@ -154,12 +154,14 @@ void loop()
      // cycleCount++;
       serverResponse="x";
       while (client.available()) {
+        //Serial.print("o");
         serverResponse = client.readStringUntil('\r');
       }
+      Serial.print("Response from server: ");
        Serial.println(serverResponse);
        
        int index = serverResponse.indexOf('_');
-       String cmd = serverResponse.substring(0,index);
+       String cmd = serverResponse.substring(1,index);
        Cdate = serverResponse.substring(index+1);
        Serial.print("\nAction to be performed: ");
        Serial.print(cmd);
