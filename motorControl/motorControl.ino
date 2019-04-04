@@ -1,14 +1,14 @@
 /*
  * Author: Priyen Shah
  * Version: 1.0
- * This code controls the motor based on web request.
- * When the main server senses fully filled water tank, the server changes the status and makes web request to this device using the IP
- * This device serves as client and server and processes the service Switch() and again updates the status via the central server
+ * This code sends a pinging request to the online server, informing the server about its parameters
+ * The server sends the action to be performed in the respose along with the date.
 */
 
 #include<ESP8266WiFi.h>
 #include<ESP8266WebServer.h>
 #include<ArduinoJson.h>
+#include<ESP8266HTTPClient.h>
 #include "acQuisor_WiFi_motor.h"
 #include"FS.h"
 
@@ -16,16 +16,16 @@ int motorStatus=0;
 float btryLvl=50.0;
 float motorPower=2.0;
 
-char* host = "172.22.25.3";
+char* host = "priyenshaha.000webhostapp.com";
 const int httpPort = 80;
 
-String serverResponse, Cdate="2019-03-23";
+String serverResponse, Cdate;
 
 ESP8266WebServer server(80);
 String customerName="",motorName="";
 
 String wifiSsid = "ap_comp_engg", wifiPass = "computer12345", apSsid = "water_acQuisor", apPass = "acquisor123";
-acQuisorWiFiMotor acqWifi(wifiSsid, wifiPass, apSsid, apPass);
+acQuisorWiFiMotor acqWifi(wifiSsid, wifiPass, apSsid, apPass, host);
 
 int relayOutput = D4;
 int controlSwitch=D3;  
@@ -124,44 +124,52 @@ void loop()
     Serial.print("\nConnecting to host @ ");
     Serial.print(host);
     Serial.println("\n");
-
-    WiFiClient client;
-    if (!client.connect(host, httpPort))
+    
+    HTTPClient http;
+    
+    acqWifi.generateURL(customerName, motorName, Cdate, btryLvl, motorStatus);
+    Serial.println(acqWifi.url);
+    
+    http.begin(acqWifi.url);
+    int httpCode = http.GET();
+    
+    if(httpCode>=200&&httpCode<=399)
+      digitalWrite(D4,0); //Turn ON led as request completed successfully.
+    else
+      digitalWrite(D4,1); //Turn off no connection indicator #D4 is active low pin#
+    
+    delay(100);    
+    
+    serverResponse="x";
+    
+    serverResponse = http.getString();
+    http.end();
+    
+    Serial.print("Response from server: ");
+    Serial.println(serverResponse);
+    
+    int index = serverResponse.indexOf('_');
+    String cmd = serverResponse.substring(1,index);
+    Cdate = serverResponse.substring(index+1);
+    Serial.print("\nCommand to motor: ");
+    Serial.println(cmd);
+    Serial.print("\nToday is: ");
+    Serial.println(Cdate);
+    if(cmd=="start")
     {
-      Serial.print("\nHost connection failed");
-      digitalWrite(D4,1); //No connection indicator #D4 is active low pin#
+      motorStatus=1;
+      Serial.println("\nMotor started!");
+    }
+    else if(cmd=="stop")
+    {
+      motorStatus=0;
+      Serial.println("\nMotor turned off");
     }
     else
     {
-      acqWifi.generateURL(customerName, motorName, Cdate, btryLvl, motorStatus);
-      Serial.println(acqWifi.url);
-      client.print(String("GET ") + acqWifi.url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
-  
-      unsigned long timeout = millis();
-      while (client.available() == 0) 
-      {
-        if (millis() - timeout > 5000) 
-        {
-          Serial.println(">>> Client Timeout: ");
-          client.stop();
-          return;
-        }
-      }
-     // cycleCount++;
-      serverResponse="x";
-      while (client.available()) {
-        serverResponse = client.readStringUntil('\r');
-      }
-      
-       int index = serverResponse.indexOf('_');
-       String cmd = serverResponse.substring(1,index);
-       Cdate = serverResponse.substring(index+1);
-       Serial.print("\nMotor data update status: ");
-       Serial.println(cmd);
-       Serial.print("\nToday is: ");
-       Serial.println(Cdate);
-
+      Serial.println("Motor State unchanged");
     }
+
    //----------------------------------------------------------//
     //Serial.print("\nNumber of successful cycles: ");
     //Serial.println(cycleCount);

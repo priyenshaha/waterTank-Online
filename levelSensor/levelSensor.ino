@@ -139,8 +139,8 @@ void loop()
     serverResponse="x";
   
     serverResponse = http.getString();
-    ;
-      
+    http.end();
+    
     Serial.print("Response from server: ");
     Serial.println(serverResponse);
       
@@ -151,24 +151,21 @@ void loop()
     Serial.print(cmd);
     Serial.print("\nToday is: ");
     Serial.println(Cdate);
-    http.end();
-
+    
     if(cmd=="start")
     {
       digitalWrite(relayOutput, 1);
       Serial.println("\nValve opened, Water is filling up!");
     }
-  
-      else if(cmd=="stop")
-      {
-        digitalWrite(relayOutput, 0);
-        Serial.println("\nValve closed. Water tank refilled");
-      }
-  
-      else
-      {
-        Serial.println("Motor / valve State unchanged");
-      }
+    else if(cmd=="stop")
+    {
+      digitalWrite(relayOutput, 0);
+      Serial.println("\nValve closed. Water tank refilled");
+    }
+    else
+    {
+      Serial.println("Valve State unchanged");
+    }
     
    //----------------------------------------------------------//
     //Serial.print("\nNumber of successful cycles: ");

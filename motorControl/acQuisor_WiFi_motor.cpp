@@ -1,11 +1,12 @@
 #include "acQuisor_WiFi_motor.h"
 #include<ESP8266WiFi.h>
-acQuisorWiFiMotor::acQuisorWiFiMotor(String WiFiSsid, String WiFiPass, String AP_ssid, String AP_pass)
+acQuisorWiFiMotor::acQuisorWiFiMotor(String WiFiSsid, String WiFiPass, String AP_ssid, String AP_pass, String host)
 {
   customerWifiSsid = WiFiSsid;
   customerWifiPass = WiFiPass;
   device_SSID = AP_ssid;
   device_PASS = AP_pass;
+  server = host;
 }
 
 void acQuisorWiFiMotor::Wconnect()
@@ -30,7 +31,9 @@ void acQuisorWiFiMotor::Wconnect()
 
 void acQuisorWiFiMotor::generateURL(String customerName, String deviceName, String Cdate, float btryLvl, int stat)
 {
-  String u = "http://172.22.25.3/water/embeddedGateway/dataFromMotorControl.php";
+  String u = "http://";
+  u += server;
+  u += "/water/embeddedGateway/dataFromMotorControl.php";
   u += "?status=";
   u += stat;
   u += "&customerName=";
