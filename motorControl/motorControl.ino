@@ -149,7 +149,7 @@ void loop()
     Serial.println(serverResponse);
     
     int index = serverResponse.indexOf('_');
-    String cmd = serverResponse.substring(1,index);
+    String cmd = serverResponse.substring(0,index);
     Cdate = serverResponse.substring(index+1);
     Serial.print("\nCommand to motor: ");
     Serial.println(cmd);
