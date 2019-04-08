@@ -132,11 +132,14 @@ void loop()
     
     http.begin(acqWifi.url);
     int httpCode = http.GET();
+    Serial.print("HTTP code: ");
+    Serial.println(hhtpCode);
     
     if(httpCode>=200&&httpCode<=399)
-      digitalWrite(D4,0); //Turn ON led as request completed successfully.
+      Serial.println("HTTP request exection successful");
+        
     else
-      digitalWrite(D4,1); //Turn off no connection indicator #D4 is active low pin#
+      Serial.println("HTTP request exection failed");
     
     delay(100);    
     
