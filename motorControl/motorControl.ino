@@ -133,7 +133,7 @@ void loop()
     http.begin(acqWifi.url);
     int httpCode = http.GET();
     Serial.print("HTTP code: ");
-    Serial.println(hhtpCode);
+    Serial.println(httpCode);
     
     if(httpCode>=200&&httpCode<=399)
       Serial.println("HTTP request exection successful");
