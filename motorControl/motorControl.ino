@@ -24,7 +24,7 @@ String serverResponse, Cdate;
 ESP8266WebServer server(80);
 String customerName="",motorName="";
 
-String wifiSsid = "ap_comp_engg", wifiPass = "computer12345", apSsid = "water_acQuisor", apPass = "acquisor123";
+String wifiSsid = "priyen1", wifiPass = "12345678", apSsid = "water_acQuisor", apPass = "acquisor123";
 acQuisorWiFiMotor acqWifi(wifiSsid, wifiPass, apSsid, apPass, host);
 
 int relayOutput = D4;
